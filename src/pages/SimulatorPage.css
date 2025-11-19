@@ -1,0 +1,61 @@
+.simulator {
+  padding: 120px 8% 80px;
+  text-align: center;
+}
+
+.simulator-header {
+  margin-bottom: 50px;
+}
+
+.simulator-header h2 {
+  font-size: 2.2rem;
+}
+
+.simulator-header p {
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+.search-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+  margin-bottom: 50px;
+}
+
+.search-btn {
+  padding: 12px 24px;
+  align-self: flex-end;
+  min-height: 42px;
+}
+
+.results {
+  justify-content: center;
+}
+
+.results .card {
+  max-width: 380px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .simulator {
+    padding: 100px 5% 60px;
+  }
+  
+  .search-container {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .search-btn {
+    align-self: stretch;
+  }
+}
+
+@media (max-width: 480px) {
+  .simulator-header h2 {
+    font-size: 1.8rem;
+  }
+}
