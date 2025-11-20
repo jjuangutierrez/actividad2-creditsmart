@@ -1,96 +1,61 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import CreditCard from '../components/CreditCard';
 import './SimulatorPage.css';
+import CreditService from "../services/CreditService";
+
+const parseRateNumber = (rateStr = "") => {
+  const m = rateStr.match(/[\d,.]+/);
+  if (!m) return 0;
+  return parseFloat(m[0].replace(',', '.'));
+};
+
+const parseAmountRange = (value) => {
+  if (!value) return [0, Infinity];
+  if (value.endsWith('+')) {
+    const min = parseInt(value.replace('+',''), 10);
+    return [min, Infinity];
+  }
+  const [a, b] = value.split('-').map(v => parseInt(v, 10));
+  return [a, b];
+};
+
+const filterByAmountRange = (products, min, max) =>
+  products.filter(product => {
+    if (max === Infinity) return product.maxAmount >= min;
+    return product.minAmount <= max && product.maxAmount >= min;
+  });
 
 const SimulatorPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [amountRange, setAmountRange] = useState('');
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [rateOrder, setRateOrder] = useState(''); // '', 'asc', 'desc'
+  const [displayProducts, setDisplayProducts] = useState([]);
+  const allProducts = CreditService.getAll();
 
-  const allProducts = [
-    {
-      id: 1,
-      image: "https://images.pexels.com/photos/6963857/pexels-photo-6963857.jpeg",
-      title: "Crédito Libre Inversión",
-      rate: "14.4% anual",
-      amount: "$1.000.000 - $50.000.000",
-      term: "60 meses",
-      description: "Financia tus proyectos personales con total libertad. Tasas competitivas y plazos flexibles.",
-      minAmount: 1000000,
-      maxAmount: 50000000
-    },
-    {
-      id: 2,
-      image: "https://images.pexels.com/photos/170811/pexels-photo-170811.jpeg",
-      title: "Crédito Vehículo",
-      rate: "12.8% anual",
-      amount: "$5.000.000 - $100.000.000",
-      term: "72 meses",
-      description: "Estrena el auto de tus sueños con tasas especiales.",
-      minAmount: 5000000,
-      maxAmount: 100000000
-    },
-    {
-      id: 3,
-      image: "https://images.pexels.com/photos/1370704/pexels-photo-1370704.jpeg",
-      title: "Crédito Vivienda",
-      rate: "10.2% anual",
-      amount: "$30.000.000 - $400.000.000",
-      term: "240 meses",
-      description: "Financia hasta el 80% del valor de tu vivienda y haz realidad tu hogar.",
-      minAmount: 30000000,
-      maxAmount: 400000000
-    },
-    {
-      id: 4,
-      image: "https://images.pexels.com/photos/1205651/pexels-photo-1205651.jpeg",
-      title: "Crédito Educativo",
-      rate: "9.5% anual",
-      amount: "$500.000 - $20.000.000",
-      term: "48 meses",
-      description: "Invierte en tu educación superior o posgrado con tasas preferenciales.",
-      minAmount: 500000,
-      maxAmount: 20000000
-    },
-    {
-      id: 5,
-      image: "https://images.pexels.com/photos/3184430/pexels-photo-3184430.jpeg",
-      title: "Crédito Empresarial",
-      rate: "15.0% anual",
-      amount: "$10.000.000 - $500.000.000",
-      term: "120 meses",
-      description: "Impulsa tu negocio con capital flexible y condiciones diseñadas para emprendedores.",
-      minAmount: 10000000,
-      maxAmount: 500000000
-    }
-  ];
-
-  const handleSearch = () => {
+  useEffect(() => {
     let results = allProducts;
 
-    if (searchTerm) {
+    if (searchTerm.trim()) {
       results = results.filter(product =>
         product.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     if (amountRange) {
-      const [min, max] = amountRange.split('-').map(v => 
-        v.endsWith('+') ? [parseInt(v), Infinity] : parseInt(v)
-      );
-      
-      results = results.filter(product => {
-        if (max === Infinity) {
-          return product.maxAmount >= min;
-        }
-        return (product.minAmount <= max && product.maxAmount >= min);
+      const [min, max] = parseAmountRange(amountRange);
+      results = filterByAmountRange(results, min, max);
+    }
+
+    if (rateOrder) {
+      results = results.slice().sort((a, b) => {
+        const ra = parseRateNumber(a.rate);
+        const rb = parseRateNumber(b.rate);
+        return rateOrder === 'asc' ? ra - rb : rb - ra;
       });
     }
 
-    setFilteredProducts(results);
-  };
-
-  const displayProducts = filteredProducts.length > 0 ? filteredProducts : allProducts;
+    setDisplayProducts(results);
+  }, [searchTerm, amountRange, rateOrder, allProducts]);
 
   return (
     <div>
@@ -102,7 +67,7 @@ const SimulatorPage = () => {
 
         <div className="search-container">
           <div className="field-group">
-            <label htmlFor="search-input">Buscar por nombre del producto</label>
+            <label htmlFor="search-input">Buscar por nombre del producto (tiempo real)</label>
             <input
               type="text"
               id="search-input"
@@ -130,26 +95,39 @@ const SimulatorPage = () => {
             </select>
           </div>
 
-          <button className="btn btn-primary search-btn" onClick={handleSearch}>
-            Buscar
-          </button>
+          <div className="field-group">
+            <label htmlFor="rate-order">Ordenar por tasa</label>
+            <select
+              id="rate-order"
+              className="input-field"
+              value={rateOrder}
+              onChange={(e) => setRateOrder(e.target.value)}
+            >
+              <option value="">Sin orden</option>
+              <option value="asc">Tasa: menor a mayor</option>
+              <option value="desc">Tasa: mayor a menor</option>
+            </select>
+          </div>
         </div>
 
         <section className="results grid-container">
-          {displayProducts.map((product) => (
-            <CreditCard
-              key={product.id}
-              image={product.image}
-              title={product.title}
-              rate={product.rate}
-              amount={product.amount}
-              term={product.term}
-              description={product.description}
-            />
-          ))}
+          {displayProducts.length === 0 ? (
+            <p className="no-results">No hay créditos disponibles</p>
+          ) : (
+            displayProducts.map((product) => (
+              <CreditCard
+                key={product.id}
+                image={product.image}
+                title={product.title}
+                rate={product.rate}
+                amount={product.amount}
+                term={product.term}
+                description={product.description}
+              />
+            ))
+          )}
         </section>
       </main>
-
     </div>
   );
 };
