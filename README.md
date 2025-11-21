@@ -77,4 +77,4 @@ Si usas yarn o pnpm, sustituye los comandos npm por yarn/pnpm correspondientes.
 
 **Contacto / Autor**
 
-Proyecto desarrollado como parte de la actividad por: Juan Miguel Guiterrez (repositorio actividad2-creditsmart) y mi compa;era de equipo Liliana Rivas RIvas.
+Proyecto desarrollado como parte de la actividad por: Juan Miguel Guiterrez (repositorio actividad2-creditsmart) y mi compa;eras de equipo Liliana Rivas RIvas y Mariluz David Martinez.
